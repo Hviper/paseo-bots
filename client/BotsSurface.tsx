@@ -571,6 +571,7 @@ function BotsSurfaceContent({ theme, layout, host, navigation }: PluginSurfacePr
         onBack={layout.compact ? () => setSelection(null) : undefined}
         onBotMenu={(anchor) => (anchor ? openBotMenu(selectedBot, anchor, "kebab") : openBotMenuFromPane(selectedBot))}
         onTogglePanel={() => setPanel({ open: !panel.open, section: panel.section })}
+        onPatch={(patch) => patchBot(selectedBot.id, patch)}
         onStarted={(chatId) => setSelection({ botId: selectedBot.id, chatId })}
       />
     ) : (
@@ -740,10 +741,11 @@ interface SelectedChatProps {
   onBack?(): void;
   onBotMenu(anchor: LayoutRectangle | null): void;
   onTogglePanel(): void;
+  onPatch?(patch: Partial<Bot>): void;
   onStarted(chatId: string): void;
 }
 
-function SelectedChat({ colors, bot, library, selection, localHost, panelOpen, layout, keyboardOpen, typeVersion, onBack, onBotMenu, onTogglePanel, onStarted }: SelectedChatProps) {
+function SelectedChat({ colors, bot, library, selection, localHost, panelOpen, layout, keyboardOpen, typeVersion, onBack, onBotMenu, onTogglePanel, onPatch, onStarted }: SelectedChatProps) {
   const host = useBotHost(bot.hostId, localHost);
   const chat = useChat(host.api, selection.chatId);
   const ensureHome = useRpc(ensureBotHomeRpc);
@@ -813,6 +815,7 @@ function SelectedChat({ colors, bot, library, selection, localHost, panelOpen, l
       onBack={onBack}
       onBotMenu={onBotMenu}
       onTogglePanel={onTogglePanel}
+      onPatch={onPatch}
       onStart={start}
       onOpenChat={onStarted}
     />

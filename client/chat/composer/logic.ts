@@ -2,6 +2,26 @@
 // Native imports here so it can be unit tested.
 import type { ComposerAttachment } from "../../../shared/attachments";
 
+// ---------------------------------------------------------------- icons
+
+export function providerIcon(providerName: string | undefined): string {
+  const p = (providerName ?? "").toLowerCase();
+  if (p.includes("antigravity") || p.includes("gemini")) return "Sparkles";
+  if (p.includes("claude") || p.includes("anthropic")) return "Bot";
+  if (p.includes("codex") || p.includes("openai") || p.includes("gpt")) return "Cpu";
+  if (p.includes("copilot") || p.includes("github")) return "Github";
+  if (p.includes("ollama") || p.includes("local")) return "Server";
+  return "Bot";
+}
+
+export function modeIcon(modeId: string | undefined | null): string {
+  const m = (modeId ?? "").toLowerCase();
+  if (m.includes("full") || m.includes("yolo") || m.includes("unattended")) return "ShieldOff";
+  if (m.includes("write") || m.includes("edit") || m.includes("auto-review")) return "ShieldAlert";
+  if (m.includes("read") || m.includes("view")) return "Eye";
+  return "ShieldCheck";
+}
+
 // ---------------------------------------------------------------- send behaviour
 
 /** Paseo's `sendBehavior` app setting (hooks/use-settings/storage.ts). Default "steer". */

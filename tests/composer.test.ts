@@ -12,8 +12,10 @@ import {
   formatTokenCount,
   isDraftEmpty,
   meterTone,
+  modeIcon,
   parseDrafts,
   parseSendBehavior,
+  providerIcon,
   resolveActiveSendBehavior,
   resolveAlternateAction,
   resolveDefaultAction,
@@ -219,3 +221,30 @@ describe("slash commands", () => {
     expect(applyCommand(commands[0]!)).toBe("/review ");
   });
 });
+
+describe("agent and mode controls", () => {
+  it("resolves provider icons correctly", () => {
+    expect(providerIcon("antigravity")).toBe("Sparkles");
+    expect(providerIcon("gemini")).toBe("Sparkles");
+    expect(providerIcon("claude")).toBe("Bot");
+    expect(providerIcon("anthropic")).toBe("Bot");
+    expect(providerIcon("codex")).toBe("Cpu");
+    expect(providerIcon("openai")).toBe("Cpu");
+    expect(providerIcon("copilot")).toBe("Github");
+    expect(providerIcon("ollama")).toBe("Server");
+    expect(providerIcon(undefined)).toBe("Bot");
+  });
+
+  it("resolves mode icons correctly", () => {
+    expect(modeIcon("full")).toBe("ShieldOff");
+    expect(modeIcon("full-access")).toBe("ShieldOff");
+    expect(modeIcon("yolo")).toBe("ShieldOff");
+    expect(modeIcon("read")).toBe("Eye");
+    expect(modeIcon("read-only")).toBe("Eye");
+    expect(modeIcon("write")).toBe("ShieldAlert");
+    expect(modeIcon("auto-review")).toBe("ShieldAlert");
+    expect(modeIcon("ask")).toBe("ShieldCheck");
+    expect(modeIcon(null)).toBe("ShieldCheck");
+  });
+});
+

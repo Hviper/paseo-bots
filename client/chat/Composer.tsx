@@ -18,6 +18,7 @@ import { measureAnchor, useMenu, type MenuEntry } from "../ui/Menu";
 import { decodeUtf8, domNode, focusWithRetries, listenForFileDrop, listenForImagePaste, pickFileHandles, type FileHandle } from "../web";
 import { content, ui } from "../typography";
 import type { ChatPaneProps, OutgoingMessage } from "../ChatPane";
+import { MicButton, ModelSelectorPill, ModeSelectorPill } from "./composer/AgentControls";
 import { CommandMenu } from "./composer/CommandMenu";
 import { ContextMeter } from "./composer/ContextMeter";
 import { getDraft, loadDrafts, queueMessage, requeueFront, setDraft, takeQueuedMessage, useQueue } from "./composer/drafts";
@@ -69,6 +70,7 @@ interface ComposerProps {
   keyboardOpen: boolean;
   /** The chat's live agent snapshot: pending permissions (stop), last usage (context meter). */
   agent?: PaseoAgent | null;
+  onPatch?(patch: Partial<Bot>): void;
   onStart(message: OutgoingMessage): Promise<void>;
 }
 
@@ -87,7 +89,7 @@ const commandCache = new Map<string, Promise<{ commands: SlashCommand[]; error: 
 // send error above a surface1 card with a borderAccent frame, radius 16; attachment tray,
 // auto-growing input, then a toolbar with "Add attachment" on the left and the context
 // meter and send/stop button on the right.
-function ChatComposer({ colors, bot, host, agentId, running, layout, keyboardOpen, agent, onStart, draftKey }: ComposerProps & { draftKey: string }) {
+function ChatComposer({ colors, bot, host, agentId, running, layout, keyboardOpen, agent, onPatch, onStart, draftKey }: ComposerProps & { draftKey: string }) {
   const toast = useToast();
   const menu = useMenu();
   const upload = useRpc(uploadRpc);
@@ -455,7 +457,18 @@ function ChatComposer({ colors, bot, host, agentId, running, layout, keyboardOpe
 
   const bottomInset = keyboardOpen ? 0 : homeIndicatorInset();
   const usage = contextUsage(agent?.lastUsage);
-  const placeholder = agentId ? (layout.compact ? "Message, /commands" : `Message ${bot.name}, or use /commands and /skills`) : `Message ${bot.name}`;
+  const isChinese = /[\u4e00-\u9fa5]/.test(bot.name);
+  const placeholder = agentId
+    ? layout.compact
+      ? isChinese
+        ? "发消息，或使用 /commands"
+        : "Message, /commands"
+      : isChinese
+      ? `给 ${bot.name} 发消息，或使用 /commands 和 /skills`
+      : `Message ${bot.name}, or use /commands and /skills`
+    : isChinese
+    ? `给 ${bot.name} 发消息，标记 @files，或使用 /commands 和 /skills`
+    : `Message ${bot.name}, mention @files, or use /commands and /skills`;
   const webInputStyle = web ? ({ lineHeight: content() * 1.4, outlineStyle: "none", outlineWidth: 0 } as object) : null;
 
   return (
@@ -531,11 +544,14 @@ function ChatComposer({ colors, bot, host, agentId, running, layout, keyboardOpe
                 inputHeight.style,
               ]}
             />
-            <View style={{ flexShrink: 0, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginHorizontal: -6 }}>
-              <View style={{ minWidth: 0, flexShrink: 1, flexGrow: 1, flexDirection: "row", alignItems: "flex-end" }}>
+            <View style={{ flexShrink: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: -6, marginTop: 4 }}>
+              <View style={{ minWidth: 0, flexShrink: 1, flexGrow: 1, flexDirection: "row", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
                 <AttachButton colors={colors} anchorRef={attachRef} iconSize={buttonIconSize} disabled={!host.api} onPress={() => void openAttachMenu()} />
+                <ModelSelectorPill colors={colors} bot={bot} host={host} disabled={!host.api || running} onPatch={onPatch} />
+                <ModeSelectorPill colors={colors} bot={bot} host={host} disabled={!host.api || running} onPatch={onPatch} />
               </View>
               <View style={{ flexShrink: 0, flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <MicButton colors={colors} iconSize={buttonIconSize} onTranscript={(speech) => updateText(text ? `${text} ${speech}` : speech)} />
                 {agentId ? (
                   <View style={{ width: 28, height: 28, flexShrink: 0, alignItems: "center", justifyContent: "center" }}>
                     <ContextMeter
@@ -553,7 +569,11 @@ function ChatComposer({ colors, bot, host, agentId, running, layout, keyboardOpe
                     disabled={sendDisabled}
                     onPress={canPressLoading ? () => void stop() : defaultAction}
                   >
-                    {loading ? <ActivityIndicator size="small" color={colors.accentForeground} /> : <Icon name="ArrowUp" size={buttonIconSize} color={colors.accentForeground} />}
+                    {loading ? (
+                      <ActivityIndicator size="small" color={colors.accentForeground} />
+                    ) : (
+                      <Icon name="CornerDownLeft" size={buttonIconSize} color={colors.accentForeground} />
+                    )}
                   </RoundButton>
                 ) : primary === "active" && canInterrupt ? (
                   <RoundButton label={stopping ? "Canceling agent" : "Stop agent"} background={RED_600} disabled={stopping} onPress={() => void stop()}>

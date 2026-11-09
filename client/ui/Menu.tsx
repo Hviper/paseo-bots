@@ -1,7 +1,7 @@
 import type { PluginTheme } from "@getpaseo/plugin";
 import { Icon, Modal } from "@getpaseo/plugin/client/react-native";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
-import { ActivityIndicator, Platform, Pressable, Text, View, type LayoutRectangle } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View, type LayoutRectangle } from "react-native";
 import { nativeTokens, useHover } from "../native";
 import { ui } from "../typography";
 
@@ -132,6 +132,7 @@ function Popover({ colors, spec, origin, onClose }: { colors: Colors; spec: Menu
   const rawLeft = spec.align === "end" ? anchor.x + anchor.width - width : anchor.x;
   const left = Math.max(8, Math.min(rawLeft, origin.width - width - 8));
   const below = anchor.y + anchor.height + 4;
+  const maxHeight = Math.min(Math.max(200, origin.height - 32), 480);
   const top = height && below + height > origin.height - 8 ? Math.max(8, anchor.y - height - 4) : below;
   return (
     <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }}>
@@ -144,6 +145,7 @@ function Popover({ colors, spec, origin, onClose }: { colors: Colors; spec: Menu
           top,
           left,
           width,
+          maxHeight,
           opacity: height ? 1 : 0,
           paddingVertical: 4,
           backgroundColor: colors.surface1,
@@ -157,7 +159,9 @@ function Popover({ colors, spec, origin, onClose }: { colors: Colors; spec: Menu
           elevation: 8,
         }}
       >
-        <Entries colors={colors} entries={spec.entries} compact={false} onClose={onClose} />
+        <ScrollView style={{ maxHeight: maxHeight - 8 }} showsVerticalScrollIndicator={false}>
+          <Entries colors={colors} entries={spec.entries} compact={false} onClose={onClose} />
+        </ScrollView>
       </View>
     </View>
   );
