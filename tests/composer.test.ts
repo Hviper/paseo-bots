@@ -224,13 +224,16 @@ describe("slash commands", () => {
 
 describe("agent and mode controls", () => {
   it("resolves provider icons correctly", () => {
-    expect(providerIcon("antigravity")).toBe("Sparkles");
+    expect(providerIcon("antigravity")).toBe("ChevronUp");
     expect(providerIcon("gemini")).toBe("Sparkles");
-    expect(providerIcon("claude")).toBe("Bot");
-    expect(providerIcon("anthropic")).toBe("Bot");
+    expect(providerIcon("claude")).toBe("Sun");
+    expect(providerIcon("anthropic")).toBe("Sun");
     expect(providerIcon("codex")).toBe("Cpu");
     expect(providerIcon("openai")).toBe("Cpu");
     expect(providerIcon("copilot")).toBe("Github");
+    expect(providerIcon("opencode")).toBe("Box");
+    expect(providerIcon("pi")).toBe("Terminal");
+    expect(providerIcon("cline")).toBe("Bot");
     expect(providerIcon("ollama")).toBe("Server");
     expect(providerIcon(undefined)).toBe("Bot");
   });

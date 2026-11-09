@@ -40,7 +40,8 @@ export interface MenuSpec {
   width?: number;
   /** Sheet title on compact, e.g. "Bot actions". */
   title: string;
-  entries: MenuEntry[];
+  entries?: MenuEntry[];
+  content?: (onClose: () => void) => ReactNode;
 }
 
 interface MenuApi {
@@ -116,7 +117,7 @@ export function MenuProvider({ colors, compact, children }: { colors: Colors; co
       {spec && compact ? (
         <Modal title={spec.title} open onOpenChange={(value) => !value && close()}>
           <Modal.Content contentContainerStyle={{ padding: 8, gap: 0 }}>
-            <Entries colors={colors} entries={spec.entries} compact onClose={close} />
+            {spec.content ? spec.content(close) : <Entries colors={colors} entries={spec.entries ?? []} compact onClose={close} />}
           </Modal.Content>
         </Modal>
       ) : null}
@@ -147,21 +148,25 @@ function Popover({ colors, spec, origin, onClose }: { colors: Colors; spec: Menu
           width,
           maxHeight,
           opacity: height ? 1 : 0,
-          paddingVertical: 4,
+          paddingVertical: spec.content ? 0 : 4,
           backgroundColor: colors.surface1,
           borderWidth: 1,
           borderColor: tokens.borderAccent,
-          borderRadius: 8,
+          borderRadius: 12,
           overflow: "hidden",
-          shadowColor: tokens.dark ? "rgba(0, 0, 0, 0.20)" : "rgba(0, 0, 0, 0.04)",
-          shadowOffset: { width: 0, height: 4 },
-          shadowRadius: tokens.dark ? 8 : 16,
-          elevation: 8,
+          shadowColor: tokens.dark ? "rgba(0, 0, 0, 0.20)" : "rgba(0, 0, 0, 0.08)",
+          shadowOffset: { width: 0, height: 6 },
+          shadowRadius: tokens.dark ? 12 : 20,
+          elevation: 10,
         }}
       >
-        <ScrollView style={{ maxHeight: maxHeight - 8 }} showsVerticalScrollIndicator={false}>
-          <Entries colors={colors} entries={spec.entries} compact={false} onClose={onClose} />
-        </ScrollView>
+        {spec.content ? (
+          spec.content(onClose)
+        ) : (
+          <ScrollView style={{ maxHeight: maxHeight - 8 }} showsVerticalScrollIndicator={false}>
+            <Entries colors={colors} entries={spec.entries ?? []} compact={false} onClose={onClose} />
+          </ScrollView>
+        )}
       </View>
     </View>
   );

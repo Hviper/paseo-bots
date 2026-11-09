@@ -6,10 +6,14 @@ import type { ComposerAttachment } from "../../../shared/attachments";
 
 export function providerIcon(providerName: string | undefined): string {
   const p = (providerName ?? "").toLowerCase();
-  if (p.includes("antigravity") || p.includes("gemini")) return "Sparkles";
-  if (p.includes("claude") || p.includes("anthropic")) return "Bot";
+  if (p.includes("antigravity")) return "ChevronUp";
+  if (p.includes("gemini")) return "Sparkles";
+  if (p.includes("claude") || p.includes("anthropic")) return "Sun";
   if (p.includes("codex") || p.includes("openai") || p.includes("gpt")) return "Cpu";
   if (p.includes("copilot") || p.includes("github")) return "Github";
+  if (p.includes("opencode")) return "Box";
+  if (p.includes("pi")) return "Terminal";
+  if (p.includes("cline")) return "Bot";
   if (p.includes("ollama") || p.includes("local")) return "Server";
   return "Bot";
 }
