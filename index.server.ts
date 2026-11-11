@@ -1,4 +1,7 @@
 import type { PluginHandlerContext, PluginServerContext } from "@getpaseo/plugin/server";
+import { stat } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { ensureBotHome, ensureBotsHome, migrateRenamedPluginData } from "./server/bot-home";
 import { turnEnded, turnStarted } from "./server/activity";
 import { CommandAllowlist } from "./server/commands";
@@ -59,6 +62,7 @@ import {
   routineRunNowRpc,
   routineStatusRpc,
   routineWebhookRpc,
+  settingsRevisionRpc,
   skillDeleteRpc,
   skillImportRpc,
   skillReadRpc,
@@ -163,6 +167,34 @@ export default function contribute(server: PluginServerContext) {
   server.handle(exportTeamRpc, async (input) => exportTeam(input, await library()));
   server.handle(importTeamRpc, importTeam);
   server.handle(uploadRpc, saveUpload);
+  const settingsFile = join(process.env.PASEO_HOME || join(homedir(), ".paseo"), "plugin-settings", "paseo-bots", "bots.json");
+  let lastMtime = 0;
+  let lastRevision = "";
+
+  settings.subscribe((state) => {
+    if (state.status === "ready" || state.status === "invalid") {
+      lastRevision = state.revision;
+    }
+  });
+
+  server.handle(settingsRevisionRpc, async () => {
+    try {
+      const s = await stat(settingsFile);
+      if (s.mtimeMs === lastMtime && lastRevision) {
+        return { revision: lastRevision };
+      }
+      const state = await settings.read();
+      if (state.status === "ready" || state.status === "invalid") {
+        lastMtime = s.mtimeMs;
+        lastRevision = state.revision;
+        return { revision: lastRevision };
+      }
+    } catch {
+      // File may not exist yet or failed stat
+    }
+    const state = await settings.read();
+    return { revision: state.status === "ready" || state.status === "invalid" ? state.revision : "" };
+  });
   server.on("agent.turn_started", async (event, context) => {
     host.attach(context.paseo);
     await turnStarted(host, journal, event).catch((error: unknown) => console.error("paseo-bots: couldn't check memory before a turn", error));

@@ -386,3 +386,10 @@ export const commandRemoveRpc = defineRpc({
   input: z.object({ botId: BotId, id: z.string() }),
   output: z.object({ ok: z.boolean() }),
 });
+
+/** Revision of bots.json on disk to allow client hot-reloading when modified externally. */
+export const settingsRevisionRpc = defineRpc({
+  name: "bots.settings.revision",
+  input: z.object({}),
+  output: z.object({ revision: z.string() }),
+});

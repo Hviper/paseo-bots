@@ -496,6 +496,10 @@ function BotsSurfaceContent({ theme, layout, host, navigation }: PluginSurfacePr
           trailing: listUi.chatSort === "manual" ? "Manual" : "Last activity",
           onSelect: () => updateUi((current) => ({ ...current, chatSort: current.chatSort === "manual" ? "activity" : "manual" })),
         },
+        {
+          label: "Reload from disk",
+          onSelect: () => void settings.reload().then(() => toast.show("Bots reloaded from disk", { variant: "success" })),
+        },
       ],
     });
   };

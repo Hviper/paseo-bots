@@ -50,6 +50,20 @@ export default function contribute(client: PluginClientContext) {
       await paseo.agents.ref(agent.id).send(learnPrompt(args));
     },
   });
+  // Paseo native /boost multi-agent orchestrator slash command
+  client.addSlashCommand({
+    name: "boost",
+    description: "Invoke the Boost multi-agent orchestrator for complex tasks (Paseo native)",
+    argumentHint: "<complex task description>",
+    context: "agent",
+    async onSubmit({ agent, args, paseo }) {
+      const topic = args.trim();
+      const prompt = topic
+        ? `【执行 Boost 多智能体编排】\n请按照 /boost 技能规范（基于 Paseo create_agent 编排规范）推进以下复杂任务：\n${topic}`
+        : `【执行 Boost 多智能体编排】\n请按照 /boost 技能规范（基于 Paseo create_agent 编排规范）开始战略规划与多智能体分工协同。`;
+      await paseo.agents.ref(agent.id).send(prompt);
+    },
+  });
   client.addTimelineTransformer({
     id: "proposals",
     query: { itemType: "tool_call" },
