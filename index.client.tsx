@@ -4,7 +4,6 @@ import { BotsSurface } from "./client/BotsSurface";
 import { NativeConnectCard } from "./client/chat/stream/ConnectCard";
 import { ProposalCard } from "./client/chat/stream/ProposalCard";
 import { RoutineRunCard } from "./client/chat/stream/RoutineRunCard";
-import { SubagentJumpCard } from "./client/chat/stream/SubagentJumpCard";
 import { requestIntent } from "./client/intent";
 import { BotsSettings } from "./client/settings/BotsSettings";
 import { installTooltips } from "./client/ui/Tooltip";
@@ -13,7 +12,6 @@ import { BOT_LABEL } from "./shared/bot";
 import { proposalIdOf } from "./shared/proposals";
 import { APP_SIGN_IN_CARD, AppSignInSchema, helloRpc, ROUTINE_RUN_CARD, RoutineRunCardSchema } from "./shared/rpc";
 import { LEARN_COMMAND, learnPrompt } from "./shared/skills";
-import { SUBAGENT_JUMP_CARD, SubagentJumpDataSchema, subagentInfoOf } from "./shared/subagent-jump";
 
 export default function contribute(client: PluginClientContext) {
   // Hands the daemon side its Paseo API so bot routines can run.
@@ -99,29 +97,6 @@ export default function contribute(client: PluginClientContext) {
     ...ROUTINE_RUN_CARD,
     schema: RoutineRunCardSchema,
     Component: ({ item, theme }) => <RoutineRunCard colors={theme.colors} card={item.data} />,
-  });
-  // Subagent Jump Card for Paseo create_agent calls
-  client.addTimelineTransformer({
-    id: "subagent-jump",
-    query: { itemType: "tool_call" },
-    transform({ item }) {
-      const info = subagentInfoOf(item as any);
-      if (!info) return undefined;
-      return {
-        items: [
-          {
-            type: "plugin",
-            ...SUBAGENT_JUMP_CARD,
-            data: info,
-          },
-        ],
-      };
-    },
-  });
-  client.addTimelineRenderer({
-    ...SUBAGENT_JUMP_CARD,
-    schema: SubagentJumpDataSchema,
-    Component: (props) => <SubagentJumpCard {...props} />,
   });
   return removeTooltips;
 }
