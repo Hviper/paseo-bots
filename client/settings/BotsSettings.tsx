@@ -10,6 +10,7 @@ import { useBotHost, useProviders } from "../data";
 import { confirmDialog, errorText } from "../native";
 import { Button, CardNote, FormTextArea, SheetActions } from "../panel/controls";
 import { useBotSettings } from "../useBotSettings";
+import { getWatchdog } from "../watchdog";
 
 type Colors = PluginSurfaceProps["theme"]["colors"];
 
@@ -26,6 +27,7 @@ export function BotsSettings({ theme, host }: PluginSurfaceProps) {
         defaults={values.defaults ?? DEFAULT_BOT_DEFAULTS}
         onChange={(patch) => void commit((current) => ({ ...current, defaults: { ...(current.defaults ?? DEFAULT_BOT_DEFAULTS), ...patch } }))}
       />
+      <WatchdogSection colors={colors} />
       <SettingsSection title="Presets" info="Bots you saved with Save as preset in their menu: their identity, instructions, playbooks and skills. They're listed under New bot.">
         <SettingsCard>
           {(values.presets ?? []).length === 0 ? <CardNote colors={colors} text="No presets yet" /> : null}
@@ -78,6 +80,35 @@ function DefaultsSection({ localHost, defaults, onChange }: { localHost: { id: s
             { label: "Off", value: "off" },
           ]}
           onValueChange={(contactBots) => onChange({ contactBots })}
+        />
+      </SettingsCard>
+    </SettingsSection>
+  );
+}
+
+function WatchdogSection({ colors }: { colors: Colors }) {
+  const toast = useToast();
+  return (
+    <SettingsSection
+      title="Agent Watchdog & Desktop Notifications"
+      info="Monitors agent liveness, catches hung/stalled processes (5min silence), and badges the macOS Dock on task completion."
+    >
+      <SettingsCard>
+        <SettingsAction
+          label="Test Notification & Dock Badge"
+          hint="Dispatches a test notification banner and illuminates the macOS Dock badge"
+          actionLabel="Test Now"
+          onPress={() => {
+            const watchdog = getWatchdog();
+            if (watchdog) {
+              watchdog.testNotification();
+              toast.show("已发送测试通知，请观察右上角横幅与 Dock 角标");
+            }
+          }}
+        />
+        <CardNote
+          colors={colors}
+          text="💡 macOS 权限要求：请在「系统设置 → 通知 → Paseo」中确保开启【允许通知】和【标记 App 图标】。若启用勿扰模式，请将 Paseo 添加到允许列表。"
         />
       </SettingsCard>
     </SettingsSection>

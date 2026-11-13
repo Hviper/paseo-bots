@@ -7,16 +7,19 @@ import { RoutineRunCard } from "./client/chat/stream/RoutineRunCard";
 import { requestIntent } from "./client/intent";
 import { BotsSettings } from "./client/settings/BotsSettings";
 import { installTooltips } from "./client/ui/Tooltip";
+import { getPaseoDesktopHost, getWatchdog, installAgentWatchdog } from "./client/watchdog";
 import { appSignIns } from "./shared/apps";
 import { BOT_LABEL } from "./shared/bot";
 import { proposalIdOf } from "./shared/proposals";
 import { APP_SIGN_IN_CARD, AppSignInSchema, helloRpc, ROUTINE_RUN_CARD, RoutineRunCardSchema } from "./shared/rpc";
 import { LEARN_COMMAND, learnPrompt } from "./shared/skills";
+import type { DesktopHostLike } from "./shared/watchdog";
 
 export default function contribute(client: PluginClientContext) {
   // Hands the daemon side its Paseo API so bot routines can run.
   void client.rpc(helloRpc, {}).catch(() => {});
   const removeTooltips = installTooltips();
+  const removeWatchdog = installAgentWatchdog(client);
   client.addSurface("bots", BotsSurface);
   client.addSidebarItem({ id: "bots", title: "Bots", icon: "Bot", surface: "bots" });
   client.addSettingsScreen({ id: "bots", title: "Bots", icon: "Bot", Component: BotsSettings });
@@ -39,6 +42,40 @@ export default function contribute(client: PluginClientContext) {
     onSelect({ openSurface }) {
       requestIntent({ kind: "new-bot" });
       openSurface("bots");
+    },
+  });
+  client.addCommandCenterItem({
+    id: "watchdog-status",
+    title: "Check Agent Watchdog Status",
+    icon: "Activity",
+    keywords: ["watchdog", "health", "alive", "status", "hang", "存活"],
+    context: "global",
+    onSelect() {
+      const watchdog = getWatchdog();
+      if (!watchdog) return;
+      const agents = watchdog.getAllTrackedAgents();
+      const running = agents.filter((a) => a.status === "running");
+      const stalled = running.filter((a) => a.isStalled);
+      const host = getPaseoDesktopHost();
+      const text =
+        running.length === 0
+          ? "当前无运行中的 Agent。"
+          : `运行中: ${running.length} 个（${stalled.length} 个疑似挂起/静默超过 5 分钟）。`;
+      host?.notification?.sendNotification?.({
+        title: "Agent 存活与健康监控",
+        body: text,
+      });
+    },
+  });
+  client.addCommandCenterItem({
+    id: "watchdog-test-notify",
+    title: "Test Desktop Notification & Dock Badge",
+    icon: "Bell",
+    keywords: ["badge", "notification", "test", "dock", "角标", "通知"],
+    context: "global",
+    onSelect() {
+      const watchdog = getWatchdog();
+      watchdog?.testNotification();
     },
   });
   // Bot chats opened in Paseo's own agent view get the same /learn and skill cards.
@@ -98,5 +135,8 @@ export default function contribute(client: PluginClientContext) {
     schema: RoutineRunCardSchema,
     Component: ({ item, theme }) => <RoutineRunCard colors={theme.colors} card={item.data} />,
   });
-  return removeTooltips;
+  return () => {
+    removeTooltips();
+    removeWatchdog();
+  };
 }
